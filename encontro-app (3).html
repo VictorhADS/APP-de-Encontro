@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spark — site de encontros</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black:   #080808;
+      --surface: #111111;
+      --card:    #161616;
+      --border:  #242424;
+      --blue:    #4A90FF;
+      --yellow:  #F5C400;
+      --text:    #F0F0F0;
+      --muted:   #666666;
+      --danger:  #FF4D6A;
+      --green:   #34D399;
+      --mono:    'Space Mono', monospace;
+      --sans:    'Space Grotesk', sans-serif;
+      --radius:  10px;
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      background: var(--black);
+      color: var(--text);
+      font-family: var(--sans);
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    /* ── PÁGINAS ── */
+    .page { display: none; min-height: 100vh; }
+    .page.active { display: flex; flex-direction: column; }
+
+    /* ════════════════════════
+       TELA 1 — LOGIN / CADASTRO
+    ════════════════════════ */
+    #page-auth {
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #page-auth::before {
+      content: '';
+      position: absolute;
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(74,144,255,.08) 0%, transparent 70%);
+      top: -100px; left: -100px;
+      pointer-events: none;
+    }
+
+    #page-auth::after {
+      content: '';
+      position: absolute;
+      width: 400px; height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(245,196,0,.06) 0%, transparent 70%);
+      bottom: -80px; right: -80px;
+      pointer-events: none;
+    }
+
+    .auth-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 420px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .auth-logo {
+      font-family: var(--mono);
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--yellow);
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .auth-logo span { color: var(--blue); }
+
+    .auth-tabs {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      font-size: 13px;
+      font-family: var(--mono);
+      cursor: pointer;
+      color: var(--muted);
+      background: transparent;
+      border: none;
+      transition: all .2s;
+      letter-spacing: 0.05em;
+    }
+
+    .auth-tab.active {
+      background: var(--blue);
+      color: #fff;
+    }
+
+    .auth-form { display: flex; flex-direction: column; gap: 14px; }
+    .auth-form.hidden { display: none; }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+    .form-group label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-family: var(--mono);
+    }
+
+    .form-group input, .form-group select, .form-group textarea {
+      background: var(--black);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 14px;
+      color: var(--text);
+      font-family: var(--sans);
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      width: 100%;
+    }
+
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(74,144,255,.12);
+    }
+
+    .form-group textarea { height: 80px; resize: none; }
+
+    .form-group select option { background: var(--black); }
+
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .btn {
+      padding: 11px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: var(--mono);
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      letter-spacing: 0.04em;
+      transition: opacity .2s;
+    }
+
+    .btn:hover { opacity: 0.85; }
+
+    .btn-yellow { background: var(--yellow); color: var(--black); }
+    .btn-blue   { background: var(--blue);   color: #fff; }
+    .btn-ghost  { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+    .btn-ghost:hover { border-color: var(--blue); color: var(--blue); opacity: 1; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-full   { width: 100%; }
+
+    .auth-divider {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      font-family: var(--mono);
+      margin: 4px 0;
+    }
+
+    /* ════════════════════════
+       NAV INFERIOR (app)
+    ════════════════════════ */
+    .app-shell { display: flex; flex-direction: column; flex: 1; }
+
+    .app-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      background: rgba(8,8,8,.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .topbar-logo {
+      font-family: var(--mono);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--yellow);
+    }
+
+    .topbar-logo span { color: var(--blue); }
+
+    .topbar-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .avatar-sm {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--blue), var(--yellow));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--black);
+      flex-shrink: 0;
+    }
+
+    .app-content { flex: 1; padding: 1.5rem 1.25rem 6rem; max-width: 680px; margin: 0 auto; width: 100%; }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: rgba(8,8,8,.95);
+      backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      z-index: 50;
+    }
+
+    .bnav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 12px 8px 10px;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 10px;
+      font-family: var(--mono);
+      letter-spacing: 0.05em;
+      transition: color .2s;
+    }
+
+    .bnav-item.active { color: var(--yellow); }
+
+    .bnav-icon { font-size: 20px; }
+
+    /* ════════════════════════
+       TELA 2 — FEED DE PERFIS
+    ════════════════════════ */
+    #page-feed .app-content { padding-top: 1rem; }
+
+    .feed-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+    }
+
+    .feed-title {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .feed-filter {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      margin-bottom: 1.25rem;
+      scrollbar-width: none;
+    }
+
+    .feed-filter::-webkit-scrollbar { display: none; }
+
+    .filter-chip {
+      padding: 6px 14px;
+      border-radius: 99px;
+      border: 1px solid var(--border);
+      font-size: 12px;
+      font-family: var(--mono);
+      color: var(--muted);
+      background: transparent;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all .18s;
+    }
+
+    .filter-chip.active {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+
+    .profiles-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .profile-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color .2s, transform .2s;
+    }
+
+    .profile-card:hover { border-color: var(--blue); transform: translateY(-3px); }
+
+    .profile-card-photo {
+      height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 52px;
+      position: relative;
+    }
+
+    .profile-card-badge {
+      position: absolute;
+      top: 10px; right: 10px;
+      background: var(--green);
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      border: 2px solid var(--card);
+    }
+
+    .profile-card-body { padding: 12px; }
+
+    .profile-card-name {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .profile-card-age {
+      font-size: 13px;
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+
+    .profile-card-info {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .profile-card-tags {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .ptag {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 99px;
+      background: rgba(74,144,255,.1);
+      color: var(--blue);
+      font-family: var(--mono);
+    }
+
+    .ptag.y { background: rgba(245,196,0,.1); color: var(--yellow); }
+
+    /* ════════════════════════
+       TELA 3 — PERFIL INDIVIDUAL
+    ════════════════════════ */
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+      cursor: pointer;
+      margin-bottom: 1.25rem;
+      border: none;
+      background: transparent;
+      padding: 0;
+      transition: color .2s;
+    }
+
+    .back-btn:hover { color: var(--text); }
+
+    .profile-hero {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+
+    .profile-cover {
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 80px;
+      position: relative;
+    }
+
+    .profile-info-row {
+      padding: 1.25rem;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .profile-main-name {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .profile-main-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 2px;
+      font-family: var(--mono);
+    }
+
+    .profile-actions { display: flex; gap: 8px; }
+
+    .action-btn {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .action-btn:hover { border-color: var(--yellow); }
+    .action-btn.match { background: var(--yellow); border-color: var(--yellow); }
+
+    .profile-section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .profile-section h4 {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 10px;
+    }
+
+    .profile-bio {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .interests-list { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .interest-tag {
+      padding: 6px 14px;
+      border-radius: 99px;
+      border: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text);
+      font-family: var(--mono);
+    }
+
+    .profile-stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+
+    .pstat {
+      background: var(--card);
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .pstat-num {
+      font-family: var(--mono);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--yellow);
+    }
+
+    .pstat-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    /* ════════════════════════
+       TELA 4 — CHAT
+    ════════════════════════ */
+    .chat-list { display: flex; flex-direction: column; gap: 2px; }
+
+    .chat-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background .2s;
+    }
+
+    .chat-item:hover { background: var(--card); }
+    .chat-item.active-chat { background: var(--card); border: 1px solid var(--border); }
+
+    .chat-avatar {
+      width: 46px; height: 46px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .online-dot {
+      position: absolute;
+      bottom: 1px; right: 1px;
+      width: 10px; height: 10px;
+      background: var(--green);
+      border-radius: 50%;
+      border: 2px solid var(--black);
+    }
+
+    .chat-info { flex: 1; min-width: 0; }
+
+    .chat-name {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .chat-preview {
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .chat-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .chat-time { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+
+    .chat-unread {
+      background: var(--yellow);
+      color: var(--black);
+      font-size: 10px;
+      font-weight: 700;
+      font-family: var(--mono);
+      padding: 2px 6px;
+      border-radius: 99px;
+    }
+
+    /* janela de chat */
+    .chat-window {
+      display: none;
+      flex-direction: column;
+      height: calc(100vh - 130px);
+    }
+
+    .chat-window.open { display: flex; }
+
+    .chat-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1rem;
+    }
+
+    .chat-header-info h3 { font-size: 16px; font-weight: 600; }
+    .chat-header-info p { font-size: 12px; color: var(--green); font-family: var(--mono); }
+
+    .messages-wrap {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-right: 4px;
+    }
+
+    .messages-wrap::-webkit-scrollbar { width: 3px; }
+    .messages-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+    .msg {
+      max-width: 75%;
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .msg-in {
+      background: var(--card);
+      border: 1px solid var(--border);
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+
+    .msg-out {
+      background: var(--blue);
+      color: #fff;
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+
+    .msg-time {
+      font-size: 10px;
+      color: var(--muted);
+      font-family: var(--mono);
+      margin-top: 2px;
+      text-align: right;
+    }
+
+    .msg-out + .msg-time { text-align: right; }
+
+    .chat-input-row {
+      display: flex;
+      gap: 10px;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      margin-top: 1rem;
+    }
+
+    .chat-input {
+      flex: 1;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: 10px 18px;
+      font-size: 14px;
+      color: var(--text);
+      font-family: var(--sans);
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .chat-input:focus { border-color: var(--blue); }
+
+    .send-btn {
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      background: var(--yellow);
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity .2s;
+      flex-shrink: 0;
+    }
+
+    .send-btn:hover { opacity: 0.85; }
+
+    /* ── UTILS ── */
+    .hidden { display: none !important; }
+    .section-title-sm {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+    }
+
+    @media (max-width: 400px) {
+      .profiles-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════
+     PÁGINA 1 — AUTH
+══════════════════════════════ -->
+<div class="page active" id="page-auth">
+  <div class="auth-box">
+    <div class="auth-logo">Spark<span>.</span></div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">Entrar</button>
+      <button class="auth-tab" onclick="switchTab('register')">Cadastrar</button>
+    </div>
+
+    <!-- LOGIN -->
+    <form class="auth-form" id="form-login" onsubmit="doLogin(event)">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" placeholder="seu@email.com" required>
+      </div>
+      <div class="form-group">
+        <label>Senha</label>
+        <input type="password" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="btn btn-yellow btn-full">Entrar →</button>
+      <div class="auth-divider">ou</div>
+      <button type="button" class="btn btn-ghost btn-full" onclick="switchTab('register')">Criar conta</button>
+    </form>
+
+    <!-- CADASTRO -->
+    <form class="auth-form hidden" id="form-register" onsubmit="doRegister(event)">
+      <div class="row-2">
+        <div class="form-group">
+          <label>Nome</label>
+          <input type="text" placeholder="Seu nome" required>
+        </div>
+        <div class="form-group">
+          <label>Idade</label>
+          <input type="number" placeholder="22" min="18" max="99" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" placeholder="seu@email.com" required>
+      </div>
+      <div class="form-group">
+        <label>Senha</label>
+        <input type="password" placeholder="••••••••" required>
+      </div>
+      <div class="form-group">
+        <label>Cidade</label>
+        <input type="text" placeholder="Brasília, DF">
+      </div>
+      <div class="form-group">
+        <label>Sobre você</label>
+        <textarea placeholder="Me conta um pouco sobre você..."></textarea>
+      </div>
+      <button type="submit" class="btn btn-yellow btn-full">Criar perfil →</button>
+    </form>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     PÁGINA 2 — FEED
+══════════════════════════════ -->
+<div class="page" id="page-feed">
+  <div class="app-shell">
+    <div class="app-topbar">
+      <div class="topbar-logo">Spark<span>.</span></div>
+      <div class="topbar-user" onclick="goToProfile('me')">
+        <div class="avatar-sm" id="my-avatar">V</div>
+      </div>
+    </div>
+
+    <div class="app-content">
+      <div class="feed-header">
+        <h2 class="feed-title">Descobrir</h2>
+        <span style="font-family:var(--mono);font-size:12px;color:var(--muted)">Brasília, DF</span>
+      </div>
+
+      <div class="feed-filter">
+        <button class="filter-chip active">Todos</button>
+        <button class="filter-chip">Próximos</button>
+        <button class="filter-chip">Online agora</button>
+        <button class="filter-chip">Novas pessoas</button>
+      </div>
+
+      <div class="profiles-grid" id="profiles-grid"></div>
+    </div>
+
+    <nav class="bottom-nav" id="bottom-nav-feed">
+      <button class="bnav-item active" onclick="showPage('feed')">
+        <span class="bnav-icon">🔍</span>
+        <span>Descobrir</span>
+      </button>
+      <button class="bnav-item" onclick="showPage('chat')">
+        <span class="bnav-icon">💬</span>
+        <span>Mensagens</span>
+      </button>
+      <button class="bnav-item" onclick="goToProfile('me')">
+        <span class="bnav-icon">👤</span>
+        <span>Perfil</span>
+      </button>
+    </nav>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     PÁGINA 3 — PERFIL INDIVIDUAL
+══════════════════════════════ -->
+<div class="page" id="page-profile">
+  <div class="app-shell">
+    <div class="app-topbar">
+      <div class="topbar-logo">Spark<span>.</span></div>
+      <div class="topbar-user">
+        <div class="avatar-sm">V</div>
+      </div>
+    </div>
+
+    <div class="app-content">
+      <button class="back-btn" id="profile-back-btn" onclick="goBack()">← voltar</button>
+
+      <div class="profile-hero">
+        <div class="profile-cover" id="profile-cover">😊</div>
+        <div class="profile-info-row">
+          <div>
+            <div class="profile-main-name" id="profile-name">—</div>
+            <div class="profile-main-sub" id="profile-sub">—</div>
+          </div>
+          <div class="profile-actions">
+            <div class="action-btn" onclick="this.classList.toggle('match'); this.textContent = this.classList.contains('match') ? '💛' : '🤍'" title="Curtir">🤍</div>
+            <div class="action-btn" onclick="showPage('chat')" title="Mensagem">💬</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-stats-row">
+        <div class="pstat">
+          <div class="pstat-num" id="pstat-matches">—</div>
+          <div class="pstat-label">matches</div>
+        </div>
+        <div class="pstat">
+          <div class="pstat-num" id="pstat-dist">—</div>
+          <div class="pstat-label">km de distância</div>
+        </div>
+        <div class="pstat">
+          <div class="pstat-num" id="pstat-online">●</div>
+          <div class="pstat-label">online</div>
+        </div>
+      </div>
+
+      <div class="profile-section">
+        <h4>sobre</h4>
+        <p class="profile-bio" id="profile-bio">—</p>
+      </div>
+
+      <div class="profile-section">
+        <h4>interesses</h4>
+        <div class="interests-list" id="profile-interests"></div>
+      </div>
+
+      <button class="btn btn-blue btn-full" onclick="showPage('chat')">💬 Mandar mensagem</button>
+    </div>
+
+    <nav class="bottom-nav">
+      <button class="bnav-item" onclick="showPage('feed')">
+        <span class="bnav-icon">🔍</span>
+        <span>Descobrir</span>
+      </button>
+      <button class="bnav-item" onclick="showPage('chat')">
+        <span class="bnav-icon">💬</span>
+        <span>Mensagens</span>
+      </button>
+      <button class="bnav-item active">
+        <span class="bnav-icon">👤</span>
+        <span>Perfil</span>
+      </button>
+    </nav>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     PÁGINA 4 — CHAT
+══════════════════════════════ -->
+<div class="page" id="page-chat">
+  <div class="app-shell">
+    <div class="app-topbar">
+      <div class="topbar-logo">Spark<span>.</span></div>
+      <div class="topbar-user">
+        <div class="avatar-sm">V</div>
+      </div>
+    </div>
+
+    <div class="app-content">
+      <!-- lista de conversas -->
+      <div id="chat-list-view">
+        <h2 class="section-title-sm">Mensagens</h2>
+        <div class="chat-list" id="chat-list"></div>
+      </div>
+
+      <!-- janela de chat -->
+      <div class="chat-window" id="chat-window">
+        <button class="back-btn" onclick="closeChat()">← conversas</button>
+        <div class="chat-header">
+          <div class="chat-avatar" id="cw-avatar">😊</div>
+          <div class="chat-header-info">
+            <h3 id="cw-name">—</h3>
+            <p>online agora</p>
+          </div>
+        </div>
+        <div class="messages-wrap" id="messages-wrap"></div>
+        <div class="chat-input-row">
+          <input class="chat-input" id="chat-input" placeholder="Escreva uma mensagem..." onkeydown="if(event.key==='Enter') sendMsg()">
+          <button class="send-btn" onclick="sendMsg()">➤</button>
+        </div>
+      </div>
+    </div>
+
+    <nav class="bottom-nav">
+      <button class="bnav-item" onclick="showPage('feed')">
+        <span class="bnav-icon">🔍</span>
+        <span>Descobrir</span>
+      </button>
+      <button class="bnav-item active">
+        <span class="bnav-icon">💬</span>
+        <span>Mensagens</span>
+      </button>
+      <button class="bnav-item" onclick="goToProfile('me')">
+        <span class="bnav-icon">👤</span>
+        <span>Perfil</span>
+      </button>
+    </nav>
+  </div>
+</div>
+
+<script>
+  /* ══ DADOS FAKE ══ */
+  const profiles = [
+    { id: 1, emoji: '😊', name: 'Ana Clara', age: 23, city: 'Brasília, DF', bio: 'Apaixonada por arte, café e boas conversas. Procuro alguém pra explorar a cidade junto.', interests: ['Arte', 'Café', 'Fotografia', 'Cinema', 'Música'], matches: 12, dist: 3, online: true, bg: 'linear-gradient(135deg,#1a1a2e,#16213e)' },
+    { id: 2, emoji: '🎸', name: 'Lucas M.', age: 26, city: 'Taguatinga, DF', bio: 'Músico nas horas vagas, dev nas horas sérias. Adoro trilhas e comida boa.', interests: ['Música', 'Dev', 'Trilhas', 'Gastronomia'], matches: 8, dist: 7, online: false, bg: 'linear-gradient(135deg,#0a1628,#1a2744)' },
+    { id: 3, emoji: '📚', name: 'Mariana S.', age: 24, city: 'Asa Norte, DF', bio: 'Leitora compulsiva. Adoro debates, séries e cozinhar receitas novas.', interests: ['Leitura', 'Séries', 'Culinária', 'Debates'], matches: 19, dist: 2, online: true, bg: 'linear-gradient(135deg,#1a0a2e,#2d1444)' },
+    { id: 4, emoji: '🏋️', name: 'Rafael T.', age: 27, city: 'Águas Claras, DF', bio: 'Personal trainer. Gosto de academia, natureza e pessoas autênticas.', interests: ['Academia', 'Natureza', 'Saúde', 'Viagens'], matches: 5, dist: 11, online: true, bg: 'linear-gradient(135deg,#0a1a0a,#0f2d14)' },
+    { id: 5, emoji: '🎨', name: 'Camila R.', age: 22, city: 'Lago Sul, DF', bio: 'Designer gráfica, amo criar coisas bonitas e encontrar beleza no cotidiano.', interests: ['Design', 'Arte', 'Viagens', 'Moda'], matches: 15, dist: 9, online: false, bg: 'linear-gradient(135deg,#1a0a0a,#2d1414)' },
+    { id: 6, emoji: '🎮', name: 'Bruno K.', age: 25, city: 'Ceilândia, DF', bio: 'Gamer e desenvolvedor. Curto filmes cult, RPG e debates filosóficos às 3h da manhã.', interests: ['Games', 'Filmes', 'Filosofia', 'Tech'], matches: 7, dist: 15, online: true, bg: 'linear-gradient(135deg,#0a0a1a,#14144a)' },
+  ];
+
+  const conversations = [
+    { id: 1, profile: profiles[0], lastMsg: 'Oi! Vi seu perfil e achei incrível 😊', time: '14:32', unread: 2 },
+    { id: 2, profile: profiles[2], lastMsg: 'Que livro você está lendo agora?', time: '11:08', unread: 0 },
+    { id: 3, profile: profiles[3], lastMsg: 'Bora treinar amanhã?', time: 'ontem', unread: 1 },
+  ];
+
+  const chatMessages = {
+    1: [
+      { out: false, text: 'Oi! Vi seu perfil e achei incrível 😊', time: '14:30' },
+      { out: true,  text: 'Oi Ana! Obrigado, o seu também é muito legal 😄', time: '14:31' },
+      { out: false, text: 'Que tipo de arte você curte?', time: '14:32' },
+    ],
+    2: [
+      { out: false, text: 'Você leu O Nome do Vento?', time: '10:55' },
+      { out: true,  text: 'Sim! Um dos melhores que já li', time: '11:00' },
+      { out: false, text: 'Que livro você está lendo agora?', time: '11:08' },
+    ],
+    3: [
+      { out: false, text: 'Oi! Bora treinar amanhã?', time: 'ontem' },
+    ],
+  };
+
+  let currentPage = 'auth';
+  let previousPage = 'feed';
+  let activeChatId = null;
+
+  /* ══ NAVEGAÇÃO ══ */
+  function showPage(name) {
+    previousPage = currentPage;
+    currentPage = name;
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    if (name === 'chat') renderChatList();
+    window.scrollTo(0, 0);
+  }
+
+  function goBack() {
+    showPage(previousPage);
+  }
+
+  /* ══ AUTH ══ */
+  function switchTab(tab) {
+    document.querySelectorAll('.auth-tab').forEach((t, i) => {
+      t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register'));
+    });
+    document.getElementById('form-login').classList.toggle('hidden', tab !== 'login');
+    document.getElementById('form-register').classList.toggle('hidden', tab !== 'register');
+  }
+
+  function doLogin(e) {
+    e.preventDefault();
+    enterApp();
+  }
+
+  function doRegister(e) {
+    e.preventDefault();
+    enterApp();
+  }
+
+  function enterApp() {
+    renderFeed();
+    showPage('feed');
+  }
+
+  /* ══ FEED ══ */
+  function renderFeed() {
+    const grid = document.getElementById('profiles-grid');
+    grid.innerHTML = profiles.map(p => `
+      <div class="profile-card" onclick="goToProfile(${p.id})">
+        <div class="profile-card-photo" style="background:${p.bg}">
+          <span style="font-size:52px">${p.emoji}</span>
+          ${p.online ? '<div class="profile-card-badge"></div>' : ''}
+        </div>
+        <div class="profile-card-body">
+          <div class="profile-card-name">
+            ${p.name}
+            <span class="profile-card-age">${p.age}</span>
+          </div>
+          <div class="profile-card-info">📍 ${p.dist} km</div>
+          <div class="profile-card-tags">
+            ${p.interests.slice(0,2).map(i => `<span class="ptag">${i}</span>`).join('')}
+            ${p.interests.length > 2 ? `<span class="ptag y">+${p.interests.length - 2}</span>` : ''}
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    // filtros
+    document.querySelectorAll('.filter-chip').forEach(chip => {
+      chip.addEventListener('click', function() {
+        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+  }
+
+  /* ══ PERFIL ══ */
+  function goToProfile(id) {
+    if (id === 'me') {
+      document.getElementById('profile-name').textContent = 'Seu Nome';
+      document.getElementById('profile-sub').textContent = '— anos · Brasília, DF';
+      document.getElementById('profile-cover').textContent = '😎';
+      document.getElementById('profile-cover').style.background = 'linear-gradient(135deg,#0a0a1a,#1a1a2e)';
+      document.getElementById('profile-bio').textContent = 'Clique em editar para adicionar sua bio.';
+      document.getElementById('pstat-matches').textContent = '0';
+      document.getElementById('pstat-dist').textContent = '0';
+      document.getElementById('pstat-online').textContent = '●';
+      document.getElementById('pstat-online').style.color = 'var(--green)';
+      document.getElementById('profile-interests').innerHTML = '<span class="interest-tag">+</span>';
+      document.getElementById('profile-back-btn').onclick = () => goBack();
+      previousPage = currentPage;
+      showPage('profile');
+      return;
+    }
+
+    const p = profiles.find(x => x.id === id);
+    if (!p) return;
+
+    document.getElementById('profile-name').textContent = `${p.name}, ${p.age}`;
+    document.getElementById('profile-sub').textContent = `📍 ${p.city} · ${p.dist} km`;
+    document.getElementById('profile-cover').textContent = p.emoji;
+    document.getElementById('profile-cover').style.background = p.bg;
+    document.getElementById('profile-bio').textContent = p.bio;
+    document.getElementById('pstat-matches').textContent = p.matches;
+    document.getElementById('pstat-dist').textContent = p.dist;
+    const onlineEl = document.getElementById('pstat-online');
+    onlineEl.textContent = p.online ? '●' : '○';
+    onlineEl.style.color = p.online ? 'var(--green)' : 'var(--muted)';
+    document.getElementById('profile-interests').innerHTML =
+      p.interests.map(i => `<span class="interest-tag">${i}</span>`).join('');
+
+    document.getElementById('profile-back-btn').onclick = () => goBack();
+    previousPage = currentPage;
+    showPage('profile');
+  }
+
+  /* ══ CHAT LIST ══ */
+  function renderChatList() {
+    closeChat();
+    const list = document.getElementById('chat-list');
+    list.innerHTML = conversations.map(c => `
+      <div class="chat-item" onclick="openChat(${c.id})">
+        <div class="chat-avatar" style="background:${c.profile.bg}">
+          ${c.profile.emoji}
+          ${c.profile.online ? '<div class="online-dot"></div>' : ''}
+        </div>
+        <div class="chat-info">
+          <div class="chat-name">${c.profile.name}</div>
+          <div class="chat-preview">${c.lastMsg}</div>
+        </div>
+        <div class="chat-meta">
+          <span class="chat-time">${c.time}</span>
+          ${c.unread ? `<span class="chat-unread">${c.unread}</span>` : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  /* ══ CHAT WINDOW ══ */
+  function openChat(id) {
+    activeChatId = id;
+    const conv = conversations.find(c => c.id === id);
+    document.getElementById('chat-list-view').classList.add('hidden');
+    const win = document.getElementById('chat-window');
+    win.classList.add('open');
+    document.getElementById('cw-name').textContent = conv.profile.name;
+    document.getElementById('cw-avatar').textContent = conv.profile.emoji;
+    document.getElementById('cw-avatar').style.background = conv.profile.bg;
+    renderMessages(id);
+    // zera unread
+    conv.unread = 0;
+  }
+
+  function closeChat() {
+    activeChatId = null;
+    document.getElementById('chat-list-view').classList.remove('hidden');
+    document.getElementById('chat-window').classList.remove('open');
+  }
+
+  function renderMessages(id) {
+    const wrap = document.getElementById('messages-wrap');
+    const msgs = chatMessages[id] || [];
+    wrap.innerHTML = msgs.map(m => `
+      <div>
+        <div class="msg ${m.out ? 'msg-out' : 'msg-in'}">${m.text}</div>
+        <div class="msg-time">${m.time}</div>
+      </div>
+    `).join('');
+    wrap.scrollTop = wrap.scrollHeight;
+  }
+
+  function sendMsg() {
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (!text || !activeChatId) return;
+
+    const now = new Date();
+    const time = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+    if (!chatMessages[activeChatId]) chatMessages[activeChatId] = [];
+    chatMessages[activeChatId].push({ out: true, text, time });
+
+    // atualiza preview na lista
+    const conv = conversations.find(c => c.id === activeChatId);
+    if (conv) conv.lastMsg = text;
+
+    input.value = '';
+    renderMessages(activeChatId);
+
+    // resposta automática depois de 1s
+    setTimeout(() => {
+      const respostas = ['Que ótimo! 😊', 'Adorei saber disso!', 'Conta mais...', 'Haha, sério mesmo? 👀', 'Concordo totalmente!'];
+      const reply = respostas[Math.floor(Math.random() * respostas.length)];
+      chatMessages[activeChatId].push({ out: false, text: reply, time });
+      renderMessages(activeChatId);
+    }, 1000);
+  }
+</script>
+</body>
+</html>
