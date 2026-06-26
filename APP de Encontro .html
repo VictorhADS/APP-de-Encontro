@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ponto de Encontro</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0D0D12;
+      --surface:  #16161E;
+      --border:   #2A2A38;
+      --accent:   #C8A0F0;
+      --accent2:  #8B5CF6;
+      --text:     #E8E6F0;
+      --muted:    #6E6C80;
+      --chip-on:  #2D1F4A;
+      --chip-brd: #7C3AED;
+      --radius:   14px;
+      --dur:      0.38s;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2.5rem 1rem 4rem;
+    }
+
+    /* ── PROGRESSO ── */
+    .progress-wrap { width: 100%; max-width: 540px; margin-bottom: 2rem; }
+
+    .progress-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .prog-label {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      transition: color .3s;
+    }
+
+    .prog-label.active { color: var(--accent); }
+
+    .progress-bar-bg {
+      height: 3px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent2), var(--accent));
+      border-radius: 99px;
+      transition: width var(--dur) cubic-bezier(.4,0,.2,1);
+      width: 20%;
+    }
+
+    /* ── CARD ── */
+    .card {
+      width: 100%;
+      max-width: 540px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 160px; height: 160px;
+      background: radial-gradient(circle, rgba(139,92,246,.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* ── STEPS ── */
+    .step { display: none; animation: fadeUp var(--dur) cubic-bezier(.4,0,.2,1) both; }
+    .step.active { display: block; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── TIPOGRAFIA ── */
+    .eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .step-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 26px;
+      font-weight: 400;
+      line-height: 1.2;
+      margin-bottom: 4px;
+    }
+
+    .step-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 1.75rem;
+    }
+
+    .group-label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin: 1.25rem 0 10px;
+    }
+
+    /* ── CAMPOS DE TEXTO ── */
+    .field { margin-bottom: 1.25rem; }
+    .field:last-of-type { margin-bottom: 0; }
+
+    .field label {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 6px;
+    }
+
+    .field input[type="text"],
+    .field input[type="date"],
+    .field input[type="time"] {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 15px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .field input:focus {
+      border-color: var(--accent2);
+      box-shadow: 0 0 0 3px rgba(139,92,246,.18);
+    }
+
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* ── VIBE CARDS ── */
+    .vibe-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+
+    .vibe-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .2s;
+      user-select: none;
+    }
+
+    .vibe-card .vi { font-size: 22px; display: block; margin-bottom: 5px; }
+    .vibe-card .vl { font-size: 12px; color: var(--muted); line-height: 1.3; }
+    .vibe-card.active { background: var(--chip-on); border-color: var(--chip-brd); }
+    .vibe-card.active .vl { color: var(--accent); }
+
+    /* ── CHIPS ── */
+    .chip-group { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .chip {
+      padding: 7px 16px;
+      border-radius: 99px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+      cursor: pointer;
+      background: var(--bg);
+      color: var(--muted);
+      transition: all .18s;
+      user-select: none;
+    }
+
+    .chip.active { background: var(--chip-on); border-color: var(--chip-brd); color: var(--accent); }
+
+    /* ── SENTIMENTO CARDS (passo 5) ── */
+    .feel-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+
+    .feel-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 14px;
+      cursor: pointer;
+      transition: all .2s;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .feel-card .fi { font-size: 24px; flex-shrink: 0; }
+    .feel-card .ft { font-size: 13px; color: var(--muted); line-height: 1.4; }
+    .feel-card .ft strong { display: block; font-size: 14px; color: var(--text); font-weight: 500; margin-bottom: 2px; }
+    .feel-card.active { background: var(--chip-on); border-color: var(--chip-brd); }
+    .feel-card.active .ft { color: var(--accent); }
+    .feel-card.active .ft strong { color: var(--accent); }
+
+    /* ── NAVEGAÇÃO ── */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 2rem;
+      gap: 10px;
+    }
+
+    .btn-back {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all .18s;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .btn-back:hover { border-color: var(--muted); color: var(--text); }
+
+    .btn-next {
+      background: linear-gradient(135deg, var(--accent2), var(--accent));
+      border: none;
+      color: #fff;
+      border-radius: 8px;
+      padding: 10px 28px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity .18s;
+      font-family: 'DM Sans', sans-serif;
+      margin-left: auto;
+    }
+
+    .btn-next:hover { opacity: 0.85; }
+
+    /* ── RESUMO ── */
+    .resume-grid { display: grid; gap: 10px; margin-bottom: 1.5rem; }
+
+    .resume-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .resume-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    .resume-value { font-size: 15px; color: var(--text); }
+
+    /* ── FRASE FINAL ── */
+    .frase-final {
+      margin-top: 1.75rem;
+      padding: 1.25rem 1.5rem;
+      border-left: 3px solid var(--accent);
+      background: rgba(200,160,240,.06);
+      border-radius: 0 10px 10px 0;
+    }
+
+    .frase-final p {
+      font-family: 'DM Serif Display', serif;
+      font-style: italic;
+      font-size: 18px;
+      color: var(--accent);
+      line-height: 1.4;
+    }
+
+    @media (max-width: 480px) {
+      .row { grid-template-columns: 1fr; }
+      .vibe-grid { grid-template-columns: repeat(2, 1fr); }
+      .feel-grid { grid-template-columns: 1fr; }
+      .step-title { font-size: 22px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .step { animation: none; }
+      * { transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="progress-wrap">
+    <div class="progress-labels">
+      <span class="prog-label active" id="pl-1">Encontro</span>
+      <span class="prog-label" id="pl-2">Vibe</span>
+      <span class="prog-label" id="pl-3">Ela</span>
+      <span class="prog-label" id="pl-4">Gestos</span>
+      <span class="prog-label" id="pl-5">Sentimento</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="prog-fill"></div>
+    </div>
+  </div>
+
+  <div class="card">
+
+    <!-- ── STEP 1: ENCONTRO ── -->
+    <div class="step active" id="step-1">
+      <p class="eyebrow">passo 1 de 5</p>
+      <h2 class="step-title">O encontro</h2>
+      <p class="step-sub">Quando, onde e o que vai rolar.</p>
+
+      <div class="row">
+        <div class="field">
+          <label>Data</label>
+          <input type="date" id="data">
+        </div>
+        <div class="field">
+          <label>Horário</label>
+          <input type="time" id="hora" value="19:00">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Local de encontro</label>
+        <input type="text" id="local" placeholder="ex: Parque da Cidade, shopping, café...">
+      </div>
+
+      <p class="group-label">Tipo de rolê</p>
+      <div class="vibe-grid">
+        <div class="vibe-card" data-v="café" onclick="toggleSingle(this,'role')"><span class="vi">☕</span><span class="vl">café</span></div>
+        <div class="vibe-card" data-v="jantar" onclick="toggleSingle(this,'role')"><span class="vi">🍽️</span><span class="vl">jantar</span></div>
+        <div class="vibe-card" data-v="cinema" onclick="toggleSingle(this,'role')"><span class="vi">🎬</span><span class="vl">cinema</span></div>
+        <div class="vibe-card" data-v="passeio" onclick="toggleSingle(this,'role')"><span class="vi">🌿</span><span class="vl">ao ar livre</span></div>
+        <div class="vibe-card" data-v="barzinho" onclick="toggleSingle(this,'role')"><span class="vi">🍻</span><span class="vl">barzinho</span></div>
+        <div class="vibe-card" data-v="surpresa" onclick="toggleSingle(this,'role')"><span class="vi">✨</span><span class="vl">surpresa</span></div>
+      </div>
+
+      <div class="nav">
+        <button class="btn-next" onclick="goTo(2)">próximo →</button>
+      </div>
+    </div>
+
+    <!-- ── STEP 2: VIBE ── -->
+    <div class="step" id="step-2">
+      <p class="eyebrow">passo 2 de 5</p>
+      <h2 class="step-title">A vibe</h2>
+      <p class="step-sub">Como você quer que o encontro seja.</p>
+
+      <p class="group-label">Clima geral</p>
+      <div class="chip-group">
+        <div class="chip" onclick="toggleChip(this)">descontraído</div>
+        <div class="chip" onclick="toggleChip(this)">romântico</div>
+        <div class="chip" onclick="toggleChip(this)">aventureiro</div>
+        <div class="chip" onclick="toggleChip(this)">tranquilo</div>
+        <div class="chip" onclick="toggleChip(this)">animado</div>
+        <div class="chip" onclick="toggleChip(this)">íntimo</div>
+        <div class="chip" onclick="toggleChip(this)">divertido</div>
+      </div>
+
+      <p class="group-label" style="margin-top:1.5rem;">Ritmo do encontro</p>
+      <div class="chip-group">
+        <div class="chip" onclick="toggleSingle(this,'ritmo')">curtinho e intenso</div>
+        <div class="chip" onclick="toggleSingle(this,'ritmo')">com calma, sem pressa</div>
+        <div class="chip" onclick="toggleSingle(this,'ritmo')">a noite toda</div>
+      </div>
+
+      <p class="group-label" style="margin-top:1.5rem;">Onde termina o encontro</p>
+      <div class="chip-group">
+        <div class="chip" onclick="toggleSingle(this,'fim')">cada um pra sua casa</div>
+        <div class="chip" onclick="toggleSingle(this,'fim')">em aberto</div>
+        <div class="chip" onclick="toggleSingle(this,'fim')">segundo rolê depois</div>
+      </div>
+
+      <div class="nav">
+        <button class="btn-back" onclick="goTo(1)">← voltar</button>
+        <button class="btn-next" onclick="goTo(3)">próximo →</button>
+      </div>
+    </div>
+
+    <!-- ── STEP 3: ELA ── -->
+    <div class="step" id="step-3">
+      <p class="eyebrow">passo 3 de 5</p>
+      <h2 class="step-title">Sobre ela</h2>
+      <p class="step-sub">O que você já sabe.</p>
+
+      <p class="group-label">O que ela gosta</p>
+      <div class="chip-group">
+        <div class="chip" onclick="toggleChip(this)">doces</div>
+        <div class="chip" onclick="toggleChip(this)">natureza</div>
+        <div class="chip" onclick="toggleChip(this)">arte</div>
+        <div class="chip" onclick="toggleChip(this)">música ao vivo</div>
+        <div class="chip" onclick="toggleChip(this)">cinema</div>
+        <div class="chip" onclick="toggleChip(this)">comida diferente</div>
+        <div class="chip" onclick="toggleChip(this)">aventura</div>
+        <div class="chip" onclick="toggleChip(this)">conversa boa</div>
+      </div>
+
+      <p class="group-label" style="margin-top:1.5rem;">O que ela não curte</p>
+      <div class="chip-group">
+        <div class="chip" onclick="toggleChip(this)">lugar barulhento</div>
+        <div class="chip" onclick="toggleChip(this)">multidão</div>
+        <div class="chip" onclick="toggleChip(this)">atraso</div>
+        <div class="chip" onclick="toggleChip(this)">frutos do mar</div>
+        <div class="chip" onclick="toggleChip(this)">bebida alcoólica</div>
+        <div class="chip" onclick="toggleChip(this)">frio</div>
+      </div>
+
+      <p class="group-label" style="margin-top:1.5rem;">Estágio entre vocês</p>
+      <div class="chip-group">
+        <div class="chip" onclick="toggleSingle(this,'estagio')">conhecendo agora</div>
+        <div class="chip" onclick="toggleSingle(this,'estagio')">já tem uma vibe</div>
+        <div class="chip" onclick="toggleSingle(this,'estagio')">bem próximos</div>
+      </div>
+
+      <div class="nav">
+        <button class="btn-back" onclick="goTo(2)">← voltar</button>
+        <button class="btn-next" onclick="goTo(4)">próximo →</button>
+      </div>
+    </div>
+
+    <!-- ── STEP 4: GESTOS ── -->
+    <div class="step" id="step-4">
+      <p class="eyebrow">passo 4 de 5</p>
+      <h2 class="step-title">O gesto</h2>
+      <p class="step-sub">O detalhe que ela não vai esquecer.</p>
+
+      <p class="group-label">Tipo de gesto</p>
+      <div class="chip-group">
+        <div class="chip" onclick="toggleChip(this)">flor</div>
+        <div class="chip" onclick="toggleChip(this)">bilhetinho</div>
+        <div class="chip" onclick="toggleChip(this)">doce favorito dela</div>
+        <div class="chip" onclick="toggleChip(this)">lugar especial</div>
+        <div class="chip" onclick="toggleChip(this)">playlist pra ela</div>
+        <div class="chip" onclick="toggleChip(this)">pequeno presente</div>
+        <div class="chip" onclick="toggleChip(this)">nenhum por agora</div>
+      </div>
+
+      <p class="group-label" style="margin-top:1.5rem;">Nível de surpresa</p>
+      <div class="chip-group">
+        <div class="chip" onclick="toggleSingle(this,'surpresa')">só um detalhe fofo</div>
+        <div class="chip" onclick="toggleSingle(this,'surpresa')">algo que vai marcar</div>
+        <div class="chip" onclick="toggleSingle(this,'surpresa')">surpresa total</div>
+      </div>
+
+      <div class="field" style="margin-top:1.5rem;">
+        <label>Alguma ideia específica? (opcional)</label>
+        <input type="text" id="gesto-extra" placeholder="ex: reservar a mesa favorita dela...">
+      </div>
+
+      <div class="nav">
+        <button class="btn-back" onclick="goTo(3)">← voltar</button>
+        <button class="btn-next" onclick="goTo(5)">próximo →</button>
+      </div>
+    </div>
+
+    <!-- ── STEP 5: SENTIMENTO ── -->
+    <div class="step" id="step-5">
+      <p class="eyebrow">passo 5 de 5</p>
+      <h2 class="step-title">O que você quer que ela sinta</h2>
+      <p class="step-sub">No final do encontro, o que fica.</p>
+
+      <div class="feel-grid">
+        <div class="feel-card" onclick="toggleSingle(this,'sentimento')">
+          <span class="fi">🥰</span>
+          <div class="ft"><strong>especial</strong>que ela se sentiu a única</div>
+        </div>
+        <div class="feel-card" onclick="toggleSingle(this,'sentimento')">
+          <span class="fi">😂</span>
+          <div class="ft"><strong>leve</strong>que riu muito e relaxou</div>
+        </div>
+        <div class="feel-card" onclick="toggleSingle(this,'sentimento')">
+          <span class="fi">🔥</span>
+          <div class="ft"><strong>animada</strong>que a noite foi intensa</div>
+        </div>
+        <div class="feel-card" onclick="toggleSingle(this,'sentimento')">
+          <span class="fi">🌙</span>
+          <div class="ft"><strong>segura</strong>que pode ser ela mesma</div>
+        </div>
+        <div class="feel-card" onclick="toggleSingle(this,'sentimento')">
+          <span class="fi">💭</span>
+          <div class="ft"><strong>curiosa</strong>querendo saber mais de você</div>
+        </div>
+        <div class="feel-card" onclick="toggleSingle(this,'sentimento')">
+          <span class="fi">💫</span>
+          <div class="ft"><strong>surpresa</strong>não esperava nada assim</div>
+        </div>
+      </div>
+
+      <div class="nav">
+        <button class="btn-back" onclick="goTo(4)">← voltar</button>
+        <button class="btn-next" onclick="gerarResumo()">ver resumo →</button>
+      </div>
+    </div>
+
+    <!-- ── STEP 6: RESUMO ── -->
+    <div class="step" id="step-6">
+      <p class="eyebrow">resumo</p>
+      <h2 class="step-title">Tudo pronto.</h2>
+      <p class="step-sub">O encontro que você planejou.</p>
+
+      <div class="resume-grid" id="resume-grid"></div>
+
+      <div class="frase-final">
+        <p>"Obrigado por escolher, mas quem decide sou eu&nbsp;;)"</p>
+      </div>
+
+      <div class="nav" style="margin-top:1.5rem;">
+        <button class="btn-back" onclick="goTo(5)">← editar</button>
+        <button class="btn-next" onclick="resetForm()">novo encontro ↺</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let current = 1;
+
+    function goTo(n) {
+      document.getElementById('step-' + current).classList.remove('active');
+      current = n;
+      document.getElementById('step-' + current).classList.add('active');
+      // progresso: 5 passos reais (step 6 é resumo, mantém 100%)
+      const pct = Math.min(current, 5) / 5 * 100;
+      document.getElementById('prog-fill').style.width = pct + '%';
+      const labels = ['pl-1','pl-2','pl-3','pl-4','pl-5'];
+      labels.forEach((id, i) => {
+        document.getElementById(id).classList.toggle('active', i + 1 === current);
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // seleção única por grupo
+    function toggleSingle(el, group) {
+      document.querySelectorAll('[data-group="' + group + '"]').forEach(c => c.classList.remove('active'));
+      el.dataset.group = group;
+      el.classList.add('active');
+    }
+
+    // seleção múltipla
+    function toggleChip(el) { el.classList.toggle('active'); }
+
+    // coleta chips ativos de um step
+    function getChips(stepId) {
+      return [...document.querySelectorAll('#' + stepId + ' .chip.active, #' + stepId + ' .feel-card.active')]
+        .map(c => {
+          const strong = c.querySelector('strong');
+          return strong ? strong.textContent : c.textContent.trim();
+        }).join(', ');
+    }
+
+    function getGroup(group) {
+      const el = document.querySelector('[data-group="' + group + '"].active');
+      if (!el) return null;
+      const strong = el.querySelector('strong');
+      return strong ? strong.textContent : el.textContent.trim();
+    }
+
+    function val(id) { return (document.getElementById(id)||{}).value?.trim() || null; }
+
+    function gerarResumo() {
+      const vibe = document.querySelector('[data-group="role"].active');
+
+      const itens = [
+        { label: 'Data',             value: val('data') ? val('data').split('-').reverse().join('/') : null },
+        { label: 'Horário',          value: val('hora') },
+        { label: 'Local',            value: val('local') },
+        { label: 'Tipo de rolê',     value: vibe ? vibe.dataset.v : null },
+        { label: 'Clima',            value: getChips('step-2').split(', ').filter(v => !['curtinho e intenso','com calma, sem pressa','a noite toda','cada um pra sua casa','em aberto','segundo rolê depois'].includes(v)).join(', ') || null },
+        { label: 'Ritmo',            value: getGroup('ritmo') },
+        { label: 'Final do encontro',value: getGroup('fim') },
+        { label: 'Ela gosta de',     value: getChips('step-3').split(', ').filter(v => !['conhecendo agora','já tem uma vibe','bem próximos','lugar barulhento','multidão','atraso','frutos do mar','bebida alcoólica','frio'].includes(v)).join(', ') || null },
+        { label: 'Estágio',          value: getGroup('estagio') },
+        { label: 'Gesto',            value: getChips('step-4').split(', ').filter(v => !['só um detalhe fofo','algo que vai marcar','surpresa total'].includes(v)).join(', ') || null },
+        { label: 'Nível de surpresa',value: getGroup('surpresa') },
+        { label: 'Ideia extra',      value: val('gesto-extra') },
+        { label: 'Ela vai sentir',   value: getGroup('sentimento') },
+      ].filter(i => i.value);
+
+      document.getElementById('resume-grid').innerHTML = itens.length
+        ? itens.map(i => `
+            <div class="resume-item">
+              <span class="resume-label">${i.label}</span>
+              <span class="resume-value">${i.value}</span>
+            </div>`).join('')
+        : '<p style="color:var(--muted);font-size:14px;">Você não selecionou nada 😅</p>';
+
+      goTo(6);
+    }
+
+    function resetForm() {
+      document.querySelectorAll('.chip, .vibe-card, .feel-card').forEach(el => {
+        el.classList.remove('active');
+        delete el.dataset.group;
+      });
+      ['data','hora','local','gesto-extra'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = id === 'hora' ? '19:00' : '';
+      });
+      goTo(1);
+    }
+  </script>
+</body>
+</html>
